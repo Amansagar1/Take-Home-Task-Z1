@@ -23,9 +23,13 @@
     // ------- Camera Gimbal & Parallax State -------
     let targetCamRx = 0; // ------- Target Pitch (deg) -------
     let targetCamRy = 0; // ------- Target Yaw (deg) -------
+    let targetCamTz = 0; // ------- Target 3D Zoom (px) -------
     let currentCamRx = 0;
     let currentCamRy = 0;
+    let currentCamTz = 0;
     const CAM_EASE = 0.055; // ------- Camera Inertia Damping -------
+    const CAM_TZ_EASE = 0.075; // ------- Zoom Inertia Damping -------
+    let zoomTimeout = null;
 
     // ------- 24-Hour Environmental Timeline -------
     const timeline = [
@@ -558,9 +562,11 @@
         // ------- Camera Easing Interpolation -------
         currentCamRx += (targetCamRx - currentCamRx) * CAM_EASE;
         currentCamRy += (targetCamRy - currentCamRy) * CAM_EASE;
+        currentCamTz += (targetCamTz - currentCamTz) * CAM_TZ_EASE;
 
         root.style.setProperty('--cam-rx', `${currentCamRx.toFixed(3)}deg`);
         root.style.setProperty('--cam-ry', `${currentCamRy.toFixed(3)}deg`);
+        root.style.setProperty('--cam-tz', `${currentCamTz.toFixed(2)}px`);
         root.style.setProperty('--idle-rx', `${idleRx.toFixed(3)}deg`);
         root.style.setProperty('--idle-ry', `${idleRy.toFixed(3)}deg`);
 
@@ -629,6 +635,50 @@
             targetCamRx = -gyroPitch;
         }
     }, { passive: true });
+
+    // ------- Interactive Small Circle Click & 3D Camera Zoom-In/Out Engine -------
+    function triggerSceneClickZoom(e) {
+        // ------- Exclude Clicks on Time Widget and Interactive Controls -------
+        if (timeWidget && timeWidget.contains(e.target)) return;
+        if (e.target.closest && (e.target.closest('button') || e.target.closest('input') || e.target.closest('#timeWidget'))) return;
+
+        const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : window.innerWidth / 2);
+        const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : window.innerHeight / 2);
+
+        // ------- Spawn Small Interactive Click Circle -------
+        const circle = document.createElement('div');
+        circle.className = 'small-click-circle';
+        circle.style.left = `${clientX}px`;
+        circle.style.top = `${clientY}px`;
+        document.body.appendChild(circle);
+
+        circle.addEventListener('animationend', () => {
+            circle.remove();
+        });
+
+        // ------- Direct Camera Yaw and Pitch Toward Click Coordinate -------
+        const normX = (clientX / window.innerWidth - 0.5) * 2;
+        const normY = (clientY / window.innerHeight - 0.5) * 2;
+        targetCamRy = normX * 6.5;
+        targetCamRx = -normY * 4.0;
+
+        // ------- Forward 3D Camera Dolly Zoom-In -------
+        targetCamTz = 160;
+
+        // ------- Play Tactile Glass Tap Acoustic Resonance If Sound Active -------
+        if (typeof ambientAudio !== 'undefined' && ambientAudio && ambientAudio.isPlaying && ambientAudio.ctx && ambientAudio.ctx.state === 'running') {
+            ambientAudio.playGlassTapPing();
+        }
+
+        // ------- Smooth Zoom-Out Return to Baseline Perspective -------
+        if (zoomTimeout) clearTimeout(zoomTimeout);
+        zoomTimeout = setTimeout(() => {
+            targetCamTz = 0;
+            zoomTimeout = null;
+        }, 750);
+    }
+
+    window.addEventListener('click', triggerSceneClickZoom);
 
     // ------- Time Widget Controls & Events -------
     if (timeTrigger && timeWidget) {
@@ -969,6 +1019,69 @@
                     this.playCarHorn({ pattern: 1 });
                 }
             }, 850);
+        }
+
+        // ------- Play Crystalline Glass Tap Ping with Double-Pane Harmonics -------
+        playGlassTapPing() {
+            if (!this.ctx || this.ctx.state !== 'running') return;
+            const now = this.ctx.currentTime;
+
+            // ------- Primary Bell Strike Oscillator (A6 1760 Hz) -------
+            const osc1 = this.ctx.createOscillator();
+            const gain1 = this.ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(1760, now);
+            osc1.frequency.exponentialRampToValueAtTime(1220, now + 0.16);
+
+            gain1.gain.setValueAtTime(0.0001, now);
+            gain1.gain.linearRampToValueAtTime(0.05, now + 0.003);
+            gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+
+            // ------- High Harmonic Shimmer Oscillator (E7 2640 Hz) -------
+            const osc2 = this.ctx.createOscillator();
+            const gain2 = this.ctx.createGain();
+            osc2.type = 'triangle';
+            osc2.frequency.setValueAtTime(2640, now);
+
+            gain2.gain.setValueAtTime(0.0001, now);
+            gain2.gain.linearRampToValueAtTime(0.025, now + 0.002);
+            gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+            // ------- Double-Pane Glass Solid Impact Thud (480 Hz) -------
+            const osc3 = this.ctx.createOscillator();
+            const gain3 = this.ctx.createGain();
+            osc3.type = 'sine';
+            osc3.frequency.setValueAtTime(480, now);
+            osc3.frequency.exponentialRampToValueAtTime(240, now + 0.08);
+
+            gain3.gain.setValueAtTime(0.0001, now);
+            gain3.gain.linearRampToValueAtTime(0.04, now + 0.002);
+            gain3.gain.exponentialRampToValueAtTime(0.0001, now + 0.07);
+
+            // ------- Resonant Bandpass Acoustic Glass Filter -------
+            const filter = this.ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(1600, now);
+            filter.Q.setValueAtTime(2.6, now);
+
+            osc1.connect(gain1);
+            gain1.connect(filter);
+
+            osc2.connect(gain2);
+            gain2.connect(filter);
+
+            osc3.connect(gain3);
+            gain3.connect(this.masterGain);
+
+            filter.connect(this.masterGain);
+
+            osc1.start(now);
+            osc2.start(now);
+            osc3.start(now);
+
+            osc1.stop(now + 0.18);
+            osc2.stop(now + 0.12);
+            osc3.stop(now + 0.10);
         }
 
         stop() {
