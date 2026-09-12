@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metropolitan Skyline — Living Day & Night Scene</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="viewport">
+        <!-- ------- 3D Scene Stage ------- -->
+        <div class="stage" id="sceneStage">
+            <div class="camera-rig" id="cameraRig">
+                <!-- ------- Sky & Atmosphere ------- -->
+                <div class="sky" id="sky">
+                    <div class="stars" id="stars"></div>
+                    
+                    <!-- ------- Horizon Haze ------- -->
+                    <div class="horizon-haze" id="horizonHaze"></div>
+
+                    <!-- ------- Cloud Layers ------- -->
+                    <div class="clouds-container">
+                        <!-- ------- Cirrus Streaks ------- -->
+                        <div class="cirrus-clouds">
+                            <div class="cirrus-streak streak-high"></div>
+                            <div class="cirrus-streak streak-low"></div>
+                        </div>
+
+                        <!-- ------- Cumulus Clouds ------- -->
+                        <div class="cumulus-clouds">
+                            <div class="cloud cloud-wide">
+                                <div class="puff puff-1"></div>
+                                <div class="puff puff-2"></div>
+                                <div class="puff puff-3"></div>
+                                <div class="puff puff-4"></div>
+                                <div class="cloud-base"></div>
+                            </div>
+                            <div class="cloud cloud-tall">
+                                <div class="puff puff-1"></div>
+                                <div class="puff puff-2"></div>
+                                <div class="puff puff-3"></div>
+                                <div class="puff puff-4"></div>
+                                <div class="puff puff-5"></div>
+                                <div class="cloud-base"></div>
+                            </div>
+                            <div class="cloud cloud-soft">
+                                <div class="puff puff-1"></div>
+                                <div class="puff puff-2"></div>
+                                <div class="puff puff-3"></div>
+                                <div class="cloud-base"></div>
+                            </div>
+                            <div class="cloud cloud-low">
+                                <div class="puff puff-1"></div>
+                                <div class="puff puff-2"></div>
+                                <div class="puff puff-3"></div>
+                                <div class="puff puff-4"></div>
+                                <div class="cloud-base"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ------- Sun & Flare ------- -->
+                    <div class="sun" id="sun">
+                        <div class="sun-corona"></div>
+                        <div class="sun-glare"></div>
+                    </div>
+
+                    <!-- ------- Moon & Craters ------- -->
+                    <div class="moon" id="moon">
+                        <div class="moon-halo"></div>
+                        <div class="crater crater-sm"></div>
+                        <div class="crater crater-md"></div>
+                        <div class="crater crater-lg"></div>
+                    </div>
+
+                    <!-- ------- Bird Flock Flight ------- -->
+                    <div class="birds-layer" id="birdsLayer" aria-hidden="true">
+                        <div class="flock-v">
+                            <div class="bird bird-lead"></div>
+                            <div class="bird bird-left-1"></div>
+                            <div class="bird bird-left-2"></div>
+                            <div class="bird bird-left-3"></div>
+                            <div class="bird bird-right-1"></div>
+                            <div class="bird bird-right-2"></div>
+                            <div class="bird bird-right-3"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ------- Skyline Container ------- -->
+                <div class="cityscape">
+                    <!-- ------- Distant Skyline Layer ------- -->
+                    <div class="skyline-distant">
+                        <div class="distant-tower tower-1"><div class="spire"><span class="beacon"></span></div></div>
+                        <div class="distant-tower tower-2"></div>
+                        <div class="distant-tower tower-3"><div class="spire"><span class="beacon delayed"></span></div></div>
+                        <div class="distant-tower tower-4"></div>
+                        <div class="distant-tower tower-5"><div class="spire"><span class="beacon"></span></div></div>
+                        <div class="distant-tower tower-6"></div>
+                        <div class="distant-tower tower-7"><div class="spire"><span class="beacon delayed"></span></div></div>
+                    </div>
+
+                    <!-- ------- Midground Skyline Layer ------- -->
+                    <div class="skyline-mid">
+                        <div class="building building-js" title="JavaScript (ES6+) Core Architecture">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">JS</span> JavaScript</span>
+                            </div>
+                            <div class="facade-light"></div>
+                            <div class="rooftop-tank"></div>
+                            <div class="crown-lighting"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                        <div class="building building-css" title="CSS3 & Modern Responsive Design">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">#</span> CSS3</span>
+                            </div>
+                            <div class="facade-light"></div>
+                            <div class="antenna-mast"><span class="beacon"></span></div>
+                            <div class="crown-lighting"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                        <div class="building building-cicd" title="CI / CD Automation & DevOps Pipelines">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">⚡</span> CI / CD</span>
+                            </div>
+                            <div class="facade-light"></div>
+                            <div class="rooftop-bulkhead"></div>
+                            <div class="crown-lighting"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                        <div class="building building-ts" title="TypeScript Strongly-Typed Systems">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">TS</span> TypeScript</span>
+                            </div>
+                            <div class="facade-light"></div>
+                            <div class="crown-lighting"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                        <div class="building building-node" title="Node.js Microservices & REST APIs">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">⬢</span> Node.js</span>
+                            </div>
+                            <div class="facade-light"></div>
+                            <div class="antenna-mast"><span class="beacon delayed"></span></div>
+                            <div class="crown-lighting"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                    </div>
+
+                    <!-- ------- Foreground Skyline Layer ------- -->
+                    <div class="skyline-front">
+                        <div class="building building-aws" title="AWS Cloud Infrastructure & Hosting">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">☁</span> AWS Cloud</span>
+                            </div>
+                            <div class="crown-lighting"></div>
+                            <div class="facade-light"></div>
+                            <div class="balconies"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                        <div class="building building-react" title="React.js Flagship Modern Web Applications">
+                            <div class="crown-lighting"></div>
+                            <div class="facade-light"></div>
+                            <div class="crown-setback">
+                                <div class="rooftop-sign">
+                                    <span class="sign-frame"><span class="sign-icon">⚛</span> React.js</span>
+                                </div>
+                            </div>
+                            <div class="building-windows"></div>
+                        </div>
+                        <div class="building building-next" title="Next.js Full-Stack Hybrid Framework">
+                            <div class="rooftop-sign">
+                                <span class="sign-frame"><span class="sign-icon">▲</span> Next.js</span>
+                            </div>
+                            <div class="crown-lighting"></div>
+                            <div class="facade-light"></div>
+                            <div class="balconies"></div>
+                            <div class="building-windows"></div>
+                        </div>
+                    </div>
+
+                    <!-- ------- Suspension Bridge Layer ------- -->
+                    <div class="bridge-layer">
+                        <div class="suspension-bridge">
+                            <div class="bridge-tower tower-west"><span class="bridge-beacon"></span></div>
+                            <div class="bridge-tower tower-east"><span class="bridge-beacon"></span></div>
+                            <div class="bridge-cable"></div>
+                            <div class="bridge-deck">
+                                <div class="bridge-traffic traffic-west"></div>
+                                <div class="bridge-traffic traffic-east"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ------- Water & Reflection Layer ------- -->
+                    <div class="water-layer">
+                        <div class="water-surface"></div>
+                        <div class="water-reflection" id="waterReflection"></div>
+                        <div class="water-reflections"></div>
+                        <div class="harbor-wall"></div>
+                    </div>
+
+                    <!-- ------- Street Level & Traffic Layer ------- -->
+                    <div class="street-layer">
+                        <!-- ------- Ground-Floor Lobbies ------- -->
+                        <div class="street-lobbies">
+                            <div class="lobby lobby-west">
+                                <div class="lobby-awning"></div>
+                                <div class="lobby-entrance"></div>
+                                <div class="lobby-glow"></div>
+                            </div>
+                            <div class="lobby lobby-center">
+                                <div class="lobby-awning wide"></div>
+                                <div class="lobby-entrance grand"></div>
+                            </div>
+                            <div class="lobby lobby-east">
+                                <div class="lobby-awning"></div>
+                                <div class="lobby-entrance"></div>
+                                <div class="lobby-glow"></div>
+                            </div>
+                        </div>
+
+                        <!-- ------- Sidewalk Promenade ------- -->
+                        <div class="promenade">
+                            <div class="promenade-pavement"></div>
+                            <div class="curb-edge"></div>
+                            <div class="street-trees">
+                                <div class="tree tree-1"><div class="tree-canopy"></div></div>
+                                <div class="tree tree-2"><div class="tree-canopy"></div></div>
+                                <div class="tree tree-3"><div class="tree-canopy"></div></div>
+                                <div class="tree tree-4"><div class="tree-canopy"></div></div>
+                                <div class="tree tree-5"><div class="tree-canopy"></div></div>
+                                <div class="tree tree-6"><div class="tree-canopy"></div></div>
+                                <div class="tree tree-7"><div class="tree-canopy"></div></div>
+                            </div>
+                            <div class="street-lamps">
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                                <div class="lamp-post"><div class="lamp-fixture"></div><div class="lamp-cone"></div></div>
+                            </div>
+                        </div>
+
+                        <!-- ------- Roadway & Traffic ------- -->
+                        <div class="roadway">
+                            <div class="road-asphalt"></div>
+                            <div class="road-median"></div>
+                            <div class="lane-divider lane-west"></div>
+                            <div class="lane-divider lane-east"></div>
+                            <div class="crosswalk crosswalk-left"></div>
+                            <div class="crosswalk crosswalk-right"></div>
+                            
+                            <!-- ------- Traffic Flows ------- -->
+                            <div class="traffic-lane traffic-west-fast">
+                                <div class="car sedan car-headlight car-1"></div>
+                                <div class="car taxi car-headlight car-2"></div>
+                                <div class="car suv car-headlight car-3"></div>
+                            </div>
+                            <div class="traffic-lane traffic-west-slow">
+                                <div class="car bus car-headlight car-1"></div>
+                                <div class="car sedan car-headlight car-2"></div>
+                            </div>
+                            <div class="traffic-lane traffic-east-fast">
+                                <div class="car sedan car-taillight car-1"></div>
+                                <div class="car taxi car-taillight car-2"></div>
+                                <div class="car suv car-taillight car-3"></div>
+                            </div>
+                            <div class="traffic-lane traffic-east-slow">
+                                <div class="car van car-taillight car-1"></div>
+                                <div class="car sedan car-taillight car-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ------- Foreground Window Frame ------- -->
+                <div class="window-frame" aria-hidden="true">
+                    <div class="glass-glare"></div>
+                    <div class="lamp-reflection"></div>
+                    <div class="frame-border frame-top"></div>
+                    <div class="frame-border frame-left"></div>
+                    <div class="frame-border frame-right"></div>
+                    <div class="windowsill"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ------- Time Controls Widget ------- -->
+        <div class="time-widget" id="timeWidget">
+            <button type="button" class="time-trigger" id="timeTrigger" title="Preview different times of day">
+                <span class="live-dot" id="liveDot"></span>
+                <span class="time-val" id="clockReadout">--:--</span>
+                <span class="time-sep">·</span>
+                <span class="phase-val" id="phaseReadout">Live</span>
+                <svg class="chevron-icon" viewBox="0 0 16 16" width="10" height="10"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M3 6l5 5 5-5"/></svg>
+            </button>
+            <div class="time-drawer" id="timeDrawer">
+                <div class="drawer-header">
+                    <span class="drawer-label">Time of Day</span>
+                    <button type="button" class="preset-btn live-btn" id="liveToggleBtn">● Live</button>
+                </div>
+                <div class="drawer-slider">
+                    <input type="range" id="timeSlider" min="0" max="1439" step="1" value="720" aria-label="Time scrubber">
+                </div>
+                <div class="drawer-presets">
+                    <button type="button" class="preset-btn" data-minutes="330">Dawn</button>
+                    <button type="button" class="preset-btn" data-minutes="720">Noon</button>
+                    <button type="button" class="preset-btn" data-minutes="870">Afternoon</button>
+                    <button type="button" class="preset-btn" data-minutes="1140">Sunset</button>
+                    <button type="button" class="preset-btn" data-minutes="1260">Dusk</button>
+                    <button type="button" class="preset-btn" data-minutes="1410">Night</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,1894 @@
+/* ------- Metropolitan Skyline - Day/Night ------- */
+
+:root {
+    /* ------- Color & Atmosphere Variables ------- */
+    --sky-zenith: #070b18;
+    --sky-mid: #0f172a;
+    --sky-horizon: #172033;
+    --horizon-haze-color: rgba(37, 36, 56, 0.7);
+    --haze-opacity: 0.8;
+    
+    --sun-x: 50%;
+    --sun-y: 110%;
+    --sun-core-color: #ffffff;
+    --sun-corona-color: rgba(255, 200, 100, 0.4);
+    --sun-size: 76px;
+    --sun-opacity: 0;
+
+    --moon-x: 50%;
+    --moon-y: 14%;
+    --moon-opacity: 1;
+
+    --star-opacity: 1;
+    --cloud-opacity: 0.65;
+    --cloud-highlight: #ffffff;
+    --cloud-shadow: rgba(135, 160, 195, 0.55);
+
+    --bldg-back: #080d1e;
+    --bldg-mid: #0d152d;
+    --bldg-front: #131c38;
+    --facade-light: rgba(255, 255, 255, 0.05);
+
+    --window-warm-glow: #ffd987;
+    --window-cool-glow: #e2eeff;
+    --window-opacity: 0.85;
+    --crown-light-opacity: 0.9;
+
+    /* ------- Window Pane Color Variables ------- */
+    --win-aws-1: rgba(140, 135, 130, 0.80);
+    --win-aws-2: rgba(110, 145, 185, 0.80);
+    --win-react-1: rgba(135, 175, 215, 0.80);
+    --win-react-2: rgba(110, 145, 185, 0.80);
+    --win-next-1: rgba(115, 165, 160, 0.80);
+    --win-next-2: rgba(110, 145, 185, 0.80);
+
+    --win-js-1: rgba(135, 175, 215, 0.80);
+    --win-js-2: rgba(110, 145, 185, 0.80);
+    --win-css-1: rgba(135, 175, 215, 0.80);
+    --win-css-2: rgba(110, 145, 185, 0.80);
+    --win-cicd-1: rgba(140, 135, 130, 0.80);
+    --win-cicd-2: rgba(110, 145, 185, 0.80);
+    --win-ts-1: rgba(115, 165, 160, 0.80);
+    --win-ts-2: rgba(135, 175, 215, 0.80);
+    --win-node-1: rgba(110, 145, 185, 0.80);
+    --win-node-2: rgba(110, 145, 185, 0.80);
+    
+    --water-base: #060b17;
+    --water-shimmer-opacity: 0.75;
+    --water-reflection-x: 50%;
+    --water-reflection-color: rgba(255, 200, 120, 0.4);
+    --water-reflection-opacity: 0.6;
+    --esplanade-light-opacity: 0.8;
+    --bridge-light-opacity: 0.8;
+    --lamp-opacity: 0.35;
+    --room-shadow: rgba(8, 12, 22, 0.6);
+
+    /* ------- 3D Camera & Parallax Variables ------- */
+    --cam-rx: 0deg;
+    --cam-ry: 0deg;
+    --cam-tz: 0px;
+    --idle-rx: 0deg;
+    --idle-ry: 0deg;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #000;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: #fff;
+    -webkit-font-smoothing: antialiased;
+}
+
+.viewport {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    perspective: 1100px;
+    perspective-origin: 50% 50%;
+}
+
+/* ------- 3D Stage & Camera Rig ------- */
+.stage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+}
+
+.camera-rig {
+    position: absolute;
+    inset: -5% -5% -5% -5%;
+    width: 110%;
+    height: 110%;
+    transform-style: preserve-3d;
+    transform-origin: 50% 50%;
+    transform: rotateX(calc(var(--cam-rx) + var(--idle-rx)))
+               rotateY(calc(var(--cam-ry) + var(--idle-ry)))
+               translateZ(var(--cam-tz));
+    will-change: transform;
+}
+
+.scene-layer {
+    transform-style: preserve-3d;
+    will-change: transform;
+}
+
+/* ------- Sky & Atmosphere ------- */
+
+.sky {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, 
+        var(--sky-zenith) 0%, 
+        var(--sky-mid) 50%, 
+        var(--sky-horizon) 88%
+    );
+    z-index: 1;
+    transform: translateZ(-950px) scale(1.88);
+    transform-origin: 50% 50%;
+    transition: background 0.05s linear;
+}
+
+/* ------- Horizon Haze ------- */
+.horizon-haze {
+    position: absolute;
+    bottom: 125px;
+    left: 0;
+    width: 100%;
+    height: 35%;
+    background: linear-gradient(0deg, var(--horizon-haze-color) 0%, transparent 100%);
+    opacity: var(--haze-opacity);
+    pointer-events: none;
+    z-index: 2;
+    transition: background 0.1s linear, opacity 0.1s linear;
+}
+
+/* ------- Stars & Starfield ------- */
+.stars {
+    position: absolute;
+    inset: 0;
+    background-image: 
+        radial-gradient(1.5px 1.5px at 14% 12%, #ffffff 100%, transparent),
+        radial-gradient(1px 1px at 28% 22%, #d8e8ff 100%, transparent),
+        radial-gradient(2px 2px at 42% 8%, #ffffff 100%, transparent),
+        radial-gradient(1px 1px at 58% 18%, #fff3e0 100%, transparent),
+        radial-gradient(1.5px 1.5px at 74% 14%, #ffffff 100%, transparent),
+        radial-gradient(1px 1px at 86% 26%, #d0e4ff 100%, transparent),
+        radial-gradient(1.5px 1.5px at 20% 36%, #ffffff 100%, transparent),
+        radial-gradient(1px 1px at 64% 32%, #ffeedd 100%, transparent),
+        radial-gradient(2px 2px at 80% 38%, #ffffff 100%, transparent),
+        radial-gradient(1px 1px at 8% 46%, #ffffff 100%, transparent),
+        radial-gradient(1.5px 1.5px at 92% 48%, #e2eeff 100%, transparent);
+    opacity: var(--star-opacity);
+    animation: stars-twinkle 6s ease-in-out infinite alternate;
+    pointer-events: none;
+}
+
+@keyframes stars-twinkle {
+    0% { opacity: calc(var(--star-opacity) * 0.85); }
+    100% { opacity: calc(var(--star-opacity) * 1.0); }
+}
+
+/* ------- Clouds Container ------- */
+
+.clouds-container {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 55%;
+    pointer-events: none;
+    z-index: 2;
+    overflow: hidden;
+    transform: translateZ(350px) scale(0.85);
+    transform-style: preserve-3d;
+    transform-origin: 50% 30%;
+}
+
+/* ------- Cirrus Clouds ------- */
+.cirrus-clouds {
+    position: absolute;
+    top: 6%;
+    left: 0;
+    width: 240%;
+    height: 35%;
+    opacity: calc(var(--cloud-opacity) * 0.7);
+    animation: cirrus-drift 140s linear infinite;
+}
+
+.cirrus-streak {
+    position: absolute;
+    height: 14px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        var(--cloud-highlight) 30%, 
+        var(--cloud-highlight) 70%, 
+        transparent 100%
+    );
+    border-radius: 50%;
+    filter: blur(8px);
+    transform: skewX(-32deg);
+}
+
+.streak-high { width: 620px; top: 16%; left: 8%; opacity: 0.45; }
+.streak-low { width: 820px; top: 44%; left: 58%; opacity: 0.35; }
+
+@keyframes cirrus-drift {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ------- Cumulus Clouds ------- */
+.cumulus-clouds {
+    position: absolute;
+    top: 6%;
+    left: 0;
+    width: 240%;
+    height: 100%;
+    opacity: var(--cloud-opacity);
+    animation: cumulus-drift 75s linear infinite;
+    transition: opacity 0.2s ease-out;
+}
+
+.cloud {
+    position: absolute;
+    filter: blur(5px) drop-shadow(0 12px 20px rgba(10, 18, 35, 0.2));
+    transition: filter 0.2s linear;
+}
+
+/* ------- Cloud Puffs & Shading ------- */
+.puff {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 45% 28%, 
+        var(--cloud-highlight) 0%, 
+        var(--cloud-highlight) 55%, 
+        var(--cloud-shadow) 100%
+    );
+    transition: background 0.2s linear;
+}
+
+.cloud-base {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 35px;
+    border-radius: 20px;
+    background: linear-gradient(180deg, 
+        transparent 0%, 
+        var(--cloud-shadow) 60%, 
+        var(--cloud-shadow) 100%
+    );
+    transition: background 0.2s linear;
+}
+
+/* ------- Cloud 1 Formation ------- */
+.cloud-wide { width: 360px; height: 110px; top: 22%; left: 8%; }
+.cloud-wide .puff-1 { width: 110px; height: 95px; bottom: 15px; left: 25px; }
+.cloud-wide .puff-2 { width: 145px; height: 115px; bottom: 20px; left: 95px; }
+.cloud-wide .puff-3 { width: 125px; height: 100px; bottom: 18px; left: 195px; }
+.cloud-wide .puff-4 { width: 95px; height: 80px; bottom: 12px; left: 255px; }
+
+/* ------- Cloud 2 Formation ------- */
+.cloud-tall { width: 440px; height: 135px; top: 12%; left: 62%; }
+.cloud-tall .puff-1 { width: 90px; height: 75px; bottom: 12px; left: 20px; }
+.cloud-tall .puff-2 { width: 130px; height: 110px; bottom: 22px; left: 75px; }
+.cloud-tall .puff-3 { width: 170px; height: 140px; bottom: 28px; left: 165px; }
+.cloud-tall .puff-4 { width: 135px; height: 115px; bottom: 22px; left: 275px; }
+.cloud-tall .puff-5 { width: 95px; height: 80px; bottom: 12px; left: 345px; }
+
+/* ------- Cloud 3 Formation ------- */
+.cloud-soft { width: 280px; height: 85px; top: 36%; left: 120%; }
+.cloud-soft .puff-1 { width: 90px; height: 75px; bottom: 12px; left: 20px; }
+.cloud-soft .puff-2 { width: 115px; height: 95px; bottom: 18px; left: 80px; }
+.cloud-soft .puff-3 { width: 95px; height: 78px; bottom: 14px; left: 165px; }
+
+/* ------- Cloud 4 Formation ------- */
+.cloud-low { width: 380px; height: 105px; top: 18%; left: 165%; }
+.cloud-low .puff-1 { width: 105px; height: 85px; bottom: 14px; left: 25px; }
+.cloud-low .puff-2 { width: 135px; height: 110px; bottom: 22px; left: 95px; }
+.cloud-low .puff-3 { width: 125px; height: 100px; bottom: 18px; left: 185px; }
+.cloud-low .puff-4 { width: 90px; height: 75px; bottom: 10px; left: 265px; }
+
+@keyframes cumulus-drift {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ------- Sun & Lens Flare ------- */
+.sun {
+    position: absolute;
+    width: var(--sun-size);
+    height: var(--sun-size);
+    left: var(--sun-x);
+    top: var(--sun-y);
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, var(--sun-core-color) 20%, rgba(255, 230, 150, 0.8) 55%, transparent 80%);
+    border-radius: 50%;
+    opacity: var(--sun-opacity);
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.2s ease-out, width 0.2s linear, height 0.2s linear;
+}
+
+.sun-corona {
+    position: absolute;
+    inset: -35px;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--sun-corona-color) 0%, transparent 70%);
+}
+
+.sun-glare {
+    position: absolute;
+    inset: -80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 65%);
+}
+
+/* ------- Moon & Craters ------- */
+.moon {
+    position: absolute;
+    width: 68px;
+    height: 68px;
+    left: var(--moon-x);
+    top: var(--moon-y);
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle at 35% 35%, #ffffff 0%, #e2eaf5 55%, #a8bccc 100%);
+    border-radius: 50%;
+    opacity: var(--moon-opacity);
+    box-shadow: 0 0 40px rgba(210, 230, 255, 0.35), inset -8px -10px 15px rgba(15, 25, 50, 0.65);
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.2s ease-out;
+}
+
+.moon-halo {
+    position: absolute;
+    inset: -25px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(190, 220, 255, 0.18) 0%, transparent 70%);
+}
+
+.crater {
+    position: absolute;
+    background: rgba(115, 135, 165, 0.35);
+    border-radius: 50%;
+    box-shadow: inset 1px 1px 2px rgba(15, 25, 45, 0.45);
+}
+.crater.crater-sm { width: 13px; height: 13px; top: 22%; left: 26%; }
+.crater.crater-md { width: 8px; height: 8px; top: 50%; left: 42%; }
+.crater.crater-lg { width: 15px; height: 15px; top: 40%; left: 60%; }
+
+/* ------- Bird Flock Flight ------- */
+
+.birds-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 2s ease-in-out;
+}
+
+.birds-layer.active {
+    opacity: 1;
+}
+
+.flock-v {
+    position: absolute;
+    top: 24%;
+    left: -200px;
+    width: 240px;
+    height: 100px;
+}
+
+.birds-layer.active .flock-v {
+    animation: flock-flight 26s linear infinite;
+}
+
+.bird {
+    position: absolute;
+    width: 16px;
+    height: 6px;
+}
+
+.bird::before,
+.bird::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 9px;
+    height: 5px;
+    border-top: 2px solid rgba(25, 18, 30, 0.85);
+    border-radius: 50% 50% 0 0;
+}
+
+.bird::before {
+    left: 0;
+    transform-origin: right bottom;
+    animation: wing-stroke-left 0.85s ease-in-out infinite alternate;
+}
+
+.bird::after {
+    right: 0;
+    transform-origin: left bottom;
+    animation: wing-stroke-right 0.85s ease-in-out infinite alternate;
+}
+
+@keyframes wing-stroke-left {
+    0% { transform: rotate(-28deg); }
+    100% { transform: rotate(32deg); }
+}
+
+@keyframes wing-stroke-right {
+    0% { transform: rotate(28deg); }
+    100% { transform: rotate(-32deg); }
+}
+
+/* ------- Bird Flock V-Formation ------- */
+.bird-lead { top: 30px; left: 180px; }
+.bird-left-1   { top: 15px; left: 130px; animation-delay: 0.1s; }
+.bird-left-2   { top: 0px;  left: 80px;  animation-delay: 0.22s; }
+.bird-left-3   { top: -15px; left: 30px; animation-delay: 0.35s; }
+.bird-right-1   { top: 45px; left: 130px; animation-delay: 0.15s; }
+.bird-right-2   { top: 60px; left: 80px;  animation-delay: 0.28s; }
+.bird-right-3   { top: 75px; left: 30px;  animation-delay: 0.4s; }
+
+@keyframes flock-flight {
+    0% {
+        transform: translate(0, 0) scale(0.9);
+        opacity: 0;
+    }
+    8% { opacity: 1; }
+    92% { opacity: 1; }
+    100% {
+        transform: translate(calc(100vw + 280px), -70px) scale(0.7);
+        opacity: 0;
+    }
+}
+
+/* ------- Skyline Container ------- */
+
+.cityscape {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 3;
+    transform-style: preserve-3d;
+}
+
+/* ------- Background Skyline (Distant) ------- */
+.skyline-distant {
+    position: absolute;
+    bottom: 168px;
+    left: 0;
+    width: 100%;
+    height: 60%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    z-index: 4;
+    transform: translateZ(-360px) scale(1.33);
+    transform-origin: 50% 100%;
+}
+
+.skyline-distant .distant-tower,
+.distant-tower {
+    position: relative;
+    background-color: var(--bldg-back);
+    border-top: 1.5px solid rgba(255, 255, 255, 0.2);
+    transition: background-color 0.1s ease-out;
+}
+
+/* ------- Distant Towers ------- */
+.tower-1 { 
+    width: 11%; height: 50%; 
+    background: linear-gradient(180deg, rgba(168, 85, 247, 0.45) 0%, rgba(88, 28, 135, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #c084fc; 
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.25);
+}
+.tower-2 { 
+    width: 14%; height: 75%; 
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.45) 0%, rgba(29, 78, 216, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #60a5fa; 
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.25);
+}
+.tower-3 { 
+    width: 12%; height: 58%; 
+    background: linear-gradient(180deg, rgba(236, 72, 153, 0.45) 0%, rgba(190, 24, 93, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #f472b6; 
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.25);
+}
+.tower-4 { 
+    width: 18%; height: 90%; 
+    background: linear-gradient(180deg, rgba(6, 182, 212, 0.45) 0%, rgba(14, 116, 144, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #22d3ee; 
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+}
+.tower-5 { 
+    width: 15%; height: 68%; 
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.45) 0%, rgba(4, 120, 87, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #34d399; 
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.25);
+}
+.tower-6 { 
+    width: 13%; height: 54%; 
+    background: linear-gradient(180deg, rgba(245, 158, 11, 0.45) 0%, rgba(180, 83, 9, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #fbbf24; 
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+.tower-7 { 
+    width: 14%; height: 62%; 
+    background: linear-gradient(180deg, rgba(249, 115, 22, 0.45) 0%, rgba(194, 65, 12, 0.6) 100%), var(--bldg-back); 
+    border-top-color: #fb923c; 
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.25);
+}
+
+/* ------- Spires & Beacons ------- */
+.spire {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 35px;
+    background: linear-gradient(to top, rgba(255,255,255,0.2), rgba(255,255,255,0.6));
+}
+
+.beacon {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3.5px;
+    height: 3.5px;
+    border-radius: 50%;
+    background: #ff2a2a;
+    box-shadow: 0 0 8px #ff2a2a;
+    animation: beacon-pulse 1.6s infinite;
+}
+
+.beacon.delayed {
+    animation-delay: 0.8s;
+}
+
+@keyframes beacon-pulse {
+    0%, 86%, 100% { opacity: 0.2; transform: translateX(-50%) scale(0.8); }
+    90%, 94% { opacity: 1; transform: translateX(-50%) scale(1.4); box-shadow: 0 0 12px #ff2a2a; }
+}
+
+/* ------- Midground Skyline Layer ------- */
+.skyline-mid {
+    position: absolute;
+    bottom: 164px;
+    left: 0;
+    width: 100%;
+    height: 54%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    z-index: 5;
+    transform: translateZ(-180px) scale(1.17);
+    transform-origin: 50% 100%;
+}
+
+.skyline-mid .building {
+    position: relative;
+    width: 17%;
+    background-color: var(--bldg-mid);
+    border-top: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -8px 0 20px rgba(0,0,0,0.45), 2px 0 6px rgba(255,255,255,0.02);
+    transition: background-color 0.1s ease-out;
+}
+
+/* ------- Midground Buildings (JS, CSS, CI/CD, TS, Node) ------- */
+.building-js { 
+    height: 62%; 
+    /* ------- JavaScript Tower (Amber Gold) ------- */
+    background: linear-gradient(180deg, rgba(234, 179, 8, 0.45) 0%, rgba(161, 98, 7, 0.72) 100%), var(--bldg-mid);
+    border-top: 2.5px solid #f7df1e;
+    box-shadow: -8px 0 20px rgba(0,0,0,0.45), 0 0 18px rgba(247, 223, 30, 0.22);
+}
+.building-css { 
+    height: 95%; 
+    /* ------- CSS3 Tower (Sapphire Blue) ------- */
+    background: linear-gradient(180deg, rgba(41, 101, 241, 0.45) 0%, rgba(30, 58, 138, 0.72) 100%), var(--bldg-mid);
+    border-top: 2.5px solid #38bdf8;
+    box-shadow: -8px 0 20px rgba(0,0,0,0.45), 0 0 20px rgba(14, 165, 233, 0.25);
+}
+.building-cicd { 
+    height: 74%; 
+    /* ------- CI / CD Tower (Pipeline Emerald) ------- */
+    background: linear-gradient(180deg, rgba(16, 185, 129, 0.45) 0%, rgba(6, 78, 59, 0.70) 100%), var(--bldg-mid);
+    border-top: 2.5px solid #10b981;
+    box-shadow: -8px 0 20px rgba(0,0,0,0.45), 0 0 18px rgba(16, 185, 129, 0.22);
+}
+.building-ts { 
+    height: 86%; 
+    /* ------- TypeScript Tower (Royal Blue) ------- */
+    background: linear-gradient(180deg, rgba(49, 120, 198, 0.45) 0%, rgba(30, 58, 138, 0.70) 100%), var(--bldg-mid);
+    border-top: 2.5px solid #60a5fa;
+    box-shadow: -8px 0 20px rgba(0,0,0,0.45), 0 0 18px rgba(49, 120, 198, 0.22);
+}
+.building-node { 
+    height: 68%; 
+    /* ------- Node.js Tower (Forest Green) ------- */
+    background: linear-gradient(180deg, rgba(34, 197, 94, 0.42) 0%, rgba(20, 83, 45, 0.70) 100%), var(--bldg-mid);
+    border-top: 2.5px solid #22c55e;
+    box-shadow: -8px 0 20px rgba(0,0,0,0.45), 0 0 18px rgba(34, 197, 94, 0.22);
+}
+
+/* ------- Facade Sunlight Highlight ------- */
+.facade-light {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 35%;
+    height: 100%;
+    background: linear-gradient(90deg, var(--facade-light) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+/* ------- Rooftop Tanks & Bulkheads ------- */
+.rooftop-tank {
+    position: absolute;
+    bottom: 100%;
+    left: 20%;
+    width: 14px;
+    height: 12px;
+    background: #1a2236;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 2px;
+}
+
+.rooftop-bulkhead {
+    position: absolute;
+    bottom: 100%;
+    right: 25%;
+    width: 22px;
+    height: 15px;
+    background: #151d30;
+    border-top: 2px solid rgba(255,255,255,0.15);
+}
+
+.antenna-mast {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 28px;
+    background: rgba(255,255,255,0.4);
+}
+
+/* ------- Rooftop Crown Lighting ------- */
+.crown-lighting {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2.5px;
+    opacity: var(--crown-light-opacity);
+    transition: opacity 0.2s ease-out;
+}
+.building-js .crown-lighting { background: #f7df1e; box-shadow: 0 0 14px #f7df1e; }
+.building-css .crown-lighting { background: #38bdf8; box-shadow: 0 0 16px #38bdf8; }
+.building-cicd .crown-lighting { background: #10b981; box-shadow: 0 0 14px #10b981; }
+.building-ts .crown-lighting { background: #60a5fa; box-shadow: 0 0 14px #60a5fa; }
+.building-node .crown-lighting { background: #22c55e; box-shadow: 0 0 14px #22c55e; }
+
+/* ------- Rooftop Tech Signs ------- */
+.rooftop-sign {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 2px;
+    z-index: 12;
+    pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1), filter 0.22s ease;
+}
+
+.rooftop-sign:hover {
+    transform: translateX(-50%) translateY(-3px) scale(1.1);
+    z-index: 25;
+}
+
+/* ------- Sign Structural Mounting Legs ------- */
+.rooftop-sign::before,
+.rooftop-sign::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    width: 1.5px;
+    height: 3.5px;
+    background: rgba(255, 255, 255, 0.35);
+}
+.rooftop-sign::before { left: 18%; }
+.rooftop-sign::after { right: 18%; }
+
+.sign-frame {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", monospace, sans-serif;
+    background: rgba(10, 14, 24, 0.88);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    border: 1px solid var(--sign-border, rgba(255,255,255,0.25));
+    color: var(--sign-color, #ffffff);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6), 0 0 calc(var(--crown-light-opacity) * 12px) var(--sign-glow, transparent);
+    text-shadow: 0 0 calc(var(--crown-light-opacity) * 8px) var(--sign-glow, transparent);
+    transition: all 0.25s ease;
+}
+
+.sign-icon {
+    font-size: 11px;
+    display: inline-block;
+    filter: drop-shadow(0 0 calc(var(--crown-light-opacity) * 4px) currentColor);
+}
+
+/* ------- Tech Brand Palettes ------- */
+/* ------- Sign: React.js ------- */
+.building-react .rooftop-sign {
+    --sign-color: #61dafb;
+    --sign-border: rgba(97, 218, 251, 0.75);
+    --sign-glow: rgba(97, 218, 251, 0.85);
+}
+.building-react .rooftop-sign .sign-frame {
+    font-size: 12px;
+    padding: 3.5px 9px;
+    border-width: 1.5px;
+}
+.building-react .rooftop-sign .sign-icon {
+    animation: reactSpin 12s linear infinite;
+    display: inline-block;
+}
+@keyframes reactSpin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* ------- Sign: Next.js ------- */
+.building-next .rooftop-sign {
+    --sign-color: #ffffff;
+    --sign-border: rgba(255, 255, 255, 0.75);
+    --sign-glow: rgba(255, 255, 255, 0.7);
+}
+.building-next .rooftop-sign .sign-frame {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-width: 1.5px;
+}
+
+/* ------- Sign: AWS Cloud ------- */
+.building-aws .rooftop-sign {
+    --sign-color: #ff9900;
+    --sign-border: rgba(255, 153, 0, 0.75);
+    --sign-glow: rgba(255, 153, 0, 0.85);
+}
+.building-aws .rooftop-sign .sign-frame {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-width: 1.5px;
+}
+
+/* ------- Sign: JavaScript ------- */
+.building-js .rooftop-sign {
+    --sign-color: #f7df1e;
+    --sign-border: rgba(247, 223, 30, 0.75);
+    --sign-glow: rgba(247, 223, 30, 0.85);
+}
+
+/* ------- Sign: CSS3 ------- */
+.building-css .rooftop-sign {
+    --sign-color: #38bdf8;
+    --sign-border: rgba(56, 189, 248, 0.75);
+    --sign-glow: rgba(56, 189, 248, 0.85);
+}
+
+/* ------- Sign: CI / CD ------- */
+.building-cicd .rooftop-sign {
+    --sign-color: #10b981;
+    --sign-border: rgba(16, 185, 129, 0.75);
+    --sign-glow: rgba(16, 185, 129, 0.85);
+}
+
+/* ------- Sign: TypeScript ------- */
+.building-ts .rooftop-sign {
+    --sign-color: #60a5fa;
+    --sign-border: rgba(96, 165, 250, 0.75);
+    --sign-glow: rgba(96, 165, 250, 0.85);
+}
+
+/* ------- Sign: Node.js ------- */
+.building-node .rooftop-sign {
+    --sign-color: #22c55e;
+    --sign-border: rgba(34, 197, 94, 0.75);
+    --sign-glow: rgba(34, 197, 94, 0.85);
+}
+
+/* ------- Midground Window Grid Styles ------- */
+.building-windows, .building-windows {
+    position: absolute;
+    inset: 8px 6px 0 6px;
+    opacity: 0.96;
+    filter: drop-shadow(0 0 calc(var(--window-opacity) * 3px) rgba(255, 235, 180, calc(var(--window-opacity) * 0.45)));
+    transition: filter 0.3s ease-out;
+}
+
+/* ------- Windows: Building 1 (JS) ------- */
+.building-js .building-windows {
+    background-image: 
+        linear-gradient(to bottom, rgba(5, 8, 16, 0.94) 3px, transparent 3px, transparent 11px, rgba(5, 8, 16, 0.94) 11px),
+        linear-gradient(to right, rgba(5, 8, 16, 0.94) 3px, transparent 3px, transparent 8px, rgba(5, 8, 16, 0.94) 8px),
+        linear-gradient(90deg, var(--win-js-1) 0%, var(--win-js-2) 100%);
+    background-size: 8px 11px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,1) 85%, rgba(0,0,0,0.4) 100%);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,1) 85%, rgba(0,0,0,0.4) 100%);
+}
+
+/* ------- Windows: Building 2 (CSS3) ------- */
+.building-css .building-windows {
+    background-image: 
+        linear-gradient(to bottom, rgba(6, 10, 20, 0.95) 4px, transparent 4px, transparent 13px, rgba(6, 10, 20, 0.95) 13px),
+        linear-gradient(to right, rgba(6, 10, 20, 0.95) 2px, transparent 2px, transparent 6px, rgba(6, 10, 20, 0.95) 6px),
+        linear-gradient(180deg, var(--win-css-1) 0%, var(--win-css-2) 100%);
+    background-size: 6px 13px;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,0.95) 85%, rgba(0,0,0,0.4) 100%);
+    -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.95) 85%, rgba(0,0,0,0.4) 100%);
+}
+
+/* ------- Windows: Building 3 (CI/CD) ------- */
+.building-cicd .building-windows {
+    background-image: 
+        linear-gradient(to bottom, rgba(5, 8, 16, 0.92) 3px, transparent 3px, transparent 12px, rgba(5, 8, 16, 0.92) 12px),
+        linear-gradient(to right, rgba(5, 8, 16, 0.92) 4px, transparent 4px, transparent 9px, rgba(5, 8, 16, 0.92) 9px),
+        linear-gradient(90deg, var(--win-cicd-1) 0%, var(--win-cicd-2) 100%);
+    background-size: 9px 12px;
+}
+
+/* ------- Windows: Building 4 (TypeScript) ------- */
+.building-ts .building-windows {
+    background-image: 
+        linear-gradient(to bottom, rgba(7, 10, 22, 0.94) 2px, transparent 2px, transparent 9px, rgba(7, 10, 22, 0.94) 9px),
+        linear-gradient(to right, rgba(7, 10, 22, 0.94) 2px, transparent 2px, transparent 7px, rgba(7, 10, 22, 0.94) 7px),
+        linear-gradient(180deg, var(--win-ts-1) 0%, var(--win-ts-2) 100%);
+    background-size: 7px 9px;
+}
+
+/* ------- Windows: Building 5 (Node.js) ------- */
+.building-node .building-windows {
+    background-image: 
+        linear-gradient(to bottom, rgba(5, 8, 18, 0.94) 3px, transparent 3px, transparent 12px, rgba(5, 8, 18, 0.94) 12px),
+        linear-gradient(to right, rgba(5, 8, 18, 0.94) 3px, transparent 3px, transparent 8px, rgba(5, 8, 18, 0.94) 8px),
+        linear-gradient(90deg, var(--win-node-1) 0%, var(--win-node-2) 100%);
+    background-size: 8px 12px;
+}
+
+/* ------- Foreground Skyline Layer ------- */
+.skyline-front {
+    position: absolute;
+    bottom: 158px;
+    left: 0;
+    width: 100%;
+    height: 46%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    z-index: 6;
+    transform: translateZ(0px);
+    transform-origin: 50% 100%;
+}
+
+.skyline-front .building {
+    position: relative;
+    background-color: var(--bldg-front);
+    border-top: 3px solid rgba(255, 255, 255, 0.18);
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: -15px 0 35px rgba(0,0,0,0.65), 3px 0 10px rgba(255,255,255,0.04);
+    transition: background-color 0.1s ease-out;
+}
+
+/* ------- Foreground Towers (AWS, React, Next) ------- */
+.building-aws { 
+    width: 26%; height: 75%; 
+    /* ------- Tower: AWS Cloud (Orange & Slate) ------- */
+    background: linear-gradient(180deg, rgba(255, 153, 0, 0.45) 0%, rgba(35, 47, 62, 0.78) 100%), var(--bldg-front);
+    border-top: 3.5px solid #ff9900;
+    box-shadow: -15px 0 35px rgba(0,0,0,0.65), 0 0 24px rgba(255, 153, 0, 0.25);
+}
+
+.building-react { 
+    width: 38%; height: 100%; 
+    /* ------- Tower: React.js (Cyan & Midnight) ------- */
+    background: linear-gradient(180deg, rgba(97, 218, 251, 0.48) 0%, rgba(15, 23, 42, 0.82) 100%), var(--bldg-front);
+    border-top: 3.5px solid #61dafb;
+    box-shadow: -15px 0 35px rgba(0,0,0,0.65), 0 0 28px rgba(97, 218, 251, 0.32);
+}
+
+.building-next { 
+    width: 28%; height: 60%; 
+    /* ------- Tower: Next.js (Monochrome Obsidian) ------- */
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(12, 14, 18, 0.85) 100%), var(--bldg-front);
+    border-top: 3.5px solid #ffffff;
+    box-shadow: -15px 0 35px rgba(0,0,0,0.65), 0 0 24px rgba(255, 255, 255, 0.25);
+}
+
+.building-aws .crown-lighting { background: #ff9900; box-shadow: 0 0 16px #ff9900; }
+.building-react .crown-lighting { background: #61dafb; box-shadow: 0 0 18px #61dafb; }
+.building-next .crown-lighting { background: #ffffff; box-shadow: 0 0 16px #ffffff; }
+
+/* ------- Crown Setback (React Tower) ------- */
+.crown-setback {
+    position: absolute;
+    bottom: 100%;
+    left: 15%;
+    width: 70%;
+    height: 18px;
+    background: linear-gradient(180deg, rgba(97, 218, 251, 0.5) 0%, rgba(15, 23, 42, 0.85) 100%), var(--bldg-front);
+    border-top: 2.5px solid #61dafb;
+    box-shadow: 0 0 16px rgba(97, 218, 251, 0.35);
+}
+
+/* ------- Balconies & Ledges ------- */
+.balconies {
+    position: absolute;
+    top: 42%;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: rgba(255, 255, 255, 0.12);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.building-aws .balconies {
+    background: rgba(251, 191, 36, 0.25);
+    border-top: 1.5px solid #fbbf24;
+}
+
+.building-next .balconies {
+    background: rgba(52, 211, 153, 0.25);
+    border-top: 1.5px solid #34d399;
+}
+
+/* ------- Foreground Window Curtain Styles ------- */
+.building-aws .building-windows {
+    /* ------- Windows: AWS Tower ------- */
+    background-image: 
+        linear-gradient(to bottom, rgba(18, 10, 8, 0.95) 4px, transparent 4px, transparent 16px, rgba(18, 10, 8, 0.95) 16px),
+        linear-gradient(to right, rgba(18, 10, 8, 0.95) 5px, transparent 5px, transparent 14px, rgba(18, 10, 8, 0.95) 14px),
+        linear-gradient(90deg, var(--win-aws-1) 0%, var(--win-aws-2) 100%);
+    background-size: 14px 16px;
+}
+
+.building-react .building-windows {
+    /* ------- Windows: React Tower ------- */
+    background-image: 
+        linear-gradient(to bottom, rgba(8, 16, 28, 0.95) 3px, transparent 3px, transparent 14px, rgba(8, 16, 28, 0.95) 14px),
+        linear-gradient(to right, rgba(8, 16, 28, 0.95) 4px, transparent 4px, transparent 12px, rgba(8, 16, 28, 0.95) 12px),
+        linear-gradient(180deg, var(--win-react-1) 0%, var(--win-react-2) 100%);
+    background-size: 12px 14px;
+}
+
+.building-next .building-windows {
+    /* ------- Windows: Next Tower ------- */
+    background-image: 
+        linear-gradient(to bottom, rgba(6, 20, 16, 0.95) 4px, transparent 4px, transparent 15px, rgba(6, 20, 16, 0.95) 15px),
+        linear-gradient(to right, rgba(6, 20, 16, 0.95) 4px, transparent 4px, transparent 13px, rgba(6, 20, 16, 0.95) 13px),
+        linear-gradient(90deg, var(--win-next-1) 0%, var(--win-next-2) 100%);
+    background-size: 13px 15px;
+}
+
+/* ------- Suspension Bridge Layer ------- */
+
+.bridge-layer {
+    position: absolute;
+    bottom: 164px;
+    left: 0;
+    width: 100%;
+    height: 55px;
+    z-index: 6;
+    pointer-events: none;
+    transform: translateZ(-90px) scale(1.08);
+    transform-origin: 50% 100%;
+}
+
+/* ------- Suspension Bridge Structure ------- */
+.suspension-bridge {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.bridge-tower {
+    position: absolute;
+    bottom: 0;
+    width: 12px;
+    height: 52px;
+    background: #0a0e1c;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.6);
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.tower-west { left: 24%; }
+.tower-east { left: 48%; }
+
+.bridge-beacon {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: #ff3b3b;
+    box-shadow: 0 0 6px #ff3b3b;
+    animation: beacon-pulse 1.8s infinite;
+}
+
+/* ------- Suspension Cables ------- */
+.bridge-cable {
+    position: absolute;
+    bottom: 14px;
+    left: 0;
+    width: 100%;
+    height: 38px;
+    border-bottom: 1.5px solid rgba(255, 255, 255, 0.25);
+    border-radius: 0 0 50% 50% / 0 0 100% 100%;
+    pointer-events: none;
+}
+
+/* ------- Bridge Traffic Deck ------- */
+.bridge-deck {
+    position: absolute;
+    bottom: 12px;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #0d1222;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+}
+
+.bridge-traffic {
+    position: absolute;
+    top: 0;
+    width: 140%;
+    height: 100%;
+}
+
+.bridge-traffic.traffic-west {
+    left: -20%;
+    background: repeating-linear-gradient(90deg, 
+        transparent 0, 
+        transparent 30px, 
+        rgba(255, 245, 220, 0.85) 32px, 
+        rgba(255, 245, 220, 0.85) 42px, 
+        transparent 50px
+    );
+    filter: blur(0.8px);
+    animation: bridge-flow-west 14s linear infinite;
+}
+
+.bridge-traffic.traffic-east {
+    left: -20%;
+    background: repeating-linear-gradient(90deg, 
+        transparent 0, 
+        transparent 28px, 
+        rgba(255, 60, 60, 0.85) 30px, 
+        rgba(255, 60, 60, 0.85) 38px, 
+        transparent 45px
+    );
+    filter: blur(0.8px);
+    animation: bridge-flow-east 16s linear infinite;
+}
+
+@keyframes bridge-flow-west {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(180px); }
+}
+
+@keyframes bridge-flow-east {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-180px); }
+}
+
+/* ------- Water & Harbor Layer ------- */
+
+.water-layer {
+    position: absolute;
+    bottom: 160px;
+    left: 0;
+    width: 100%;
+    height: 38px;
+    z-index: 7;
+    background: linear-gradient(180deg, var(--water-base) 0%, #030610 100%);
+    overflow: hidden;
+    transform: translateZ(-40px) scale(1.04);
+    transform-origin: 50% 100%;
+    transition: background 0.1s linear;
+    border-bottom: 2px solid #141a27;
+}
+
+/* ------- Water Surface Ripples ------- */
+.water-surface {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, 
+        transparent 0, 
+        transparent 3px, 
+        rgba(255, 255, 255, 0.035) 3px, 
+        rgba(255, 255, 255, 0.035) 5px
+    );
+    opacity: 0.75;
+    transform: perspective(300px) rotateX(25deg);
+    transform-origin: 50% 100%;
+}
+
+.harbor-wall {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: #192030;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ------- Water Reflection Path ------- */
+.water-reflection {
+    position: absolute;
+    top: 0;
+    left: var(--water-reflection-x);
+    transform: translateX(-50%);
+    width: 120px;
+    height: 100%;
+    background: radial-gradient(ellipse at 50% 0%, 
+        var(--water-reflection-color) 0%, 
+        rgba(255, 210, 140, 0.15) 35%, 
+        transparent 75%
+    );
+    opacity: var(--water-reflection-opacity);
+    filter: blur(5px);
+    animation: reflection-shimmer-drift 4s ease-in-out infinite alternate;
+    pointer-events: none;
+    transition: opacity 0.2s ease-out;
+}
+
+@keyframes reflection-shimmer-drift {
+    0% { transform: translateX(-50%) scaleX(0.9) skewX(-1.5deg); }
+    100% { transform: translateX(-50%) scaleX(1.15) skewX(1.5deg); }
+}
+
+/* ------- Building Water Reflections ------- */
+.water-reflections {
+    position: absolute;
+    inset: 0;
+    opacity: var(--water-shimmer-opacity);
+    background-image: 
+        linear-gradient(90deg, 
+            transparent 0%, 
+            transparent 12%, 
+            rgba(255, 215, 130, 0.06) 16%, 
+            transparent 20%, 
+            transparent 32%, 
+            rgba(255, 230, 160, 0.09) 36%, 
+            transparent 42%, 
+            transparent 56%, 
+            rgba(255, 215, 130, 0.07) 60%, 
+            transparent 66%,
+            transparent 78%,
+            rgba(255, 215, 130, 0.06) 82%,
+            transparent 88%
+        );
+    filter: blur(6px);
+    animation: water-ambient-shimmer 7s ease-in-out infinite alternate;
+    transition: opacity 0.2s ease-out;
+}
+
+@keyframes water-ambient-shimmer {
+    0% { transform: scaleY(0.94); opacity: calc(var(--water-shimmer-opacity) * 0.85); }
+    100% { transform: scaleY(1.06); opacity: calc(var(--water-shimmer-opacity) * 1.15); }
+}
+
+/* ------- Street Level & Traffic Layer ------- */
+
+.street-layer {
+    position: absolute;
+    bottom: 22px;
+    left: 0;
+    width: 100%;
+    height: 144px;
+    z-index: 8;
+    pointer-events: none;
+    transform: translateZ(25px);
+    transform-origin: 50% 100%;
+}
+
+/* ------- Street Podiums & Lobbies ------- */
+.street-lobbies {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 24px;
+    display: flex;
+    justify-content: space-between;
+    padding: 0 4%;
+}
+
+.lobby {
+    position: relative;
+    background: linear-gradient(180deg, #182236 0%, #0d1320 100%);
+    border-top: 2px solid rgba(255, 255, 255, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-right: 1px solid rgba(0, 0, 0, 0.5);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+}
+
+.lobby.lobby-west { 
+    width: 26%; height: 100%; 
+    background: linear-gradient(180deg, #3d1c08 0%, #170b03 100%);
+    border-top: 2.5px solid #f59e0b;
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.25);
+}
+.lobby.lobby-center { 
+    width: 38%; height: 100%; 
+    background: linear-gradient(180deg, #10243e 0%, #071322 100%);
+    border-top: 2.5px solid #60a5fa;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
+}
+.lobby.lobby-east { 
+    width: 28%; height: 100%; 
+    background: linear-gradient(180deg, #092c24 0%, #041410 100%);
+    border-top: 2.5px solid #34d399;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+}
+
+.lobby-awning {
+    position: absolute;
+    top: -5px;
+    left: -4%;
+    width: 108%;
+    height: 6px;
+    background: #090e18;
+    border-top: 1.5px solid #364258;
+    border-radius: 2px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.5);
+}
+
+.lobby-awning.wide {
+    width: 110%;
+    left: -5%;
+}
+
+.lobby-entrance {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 45%;
+    height: 15px;
+    background: linear-gradient(180deg, rgba(255, 225, 160, 0.6) 0%, rgba(255, 190, 100, 0.2) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-bottom: none;
+    border-radius: 2px 2px 0 0;
+}
+
+.lobby-entrance.grand {
+    width: 60%;
+}
+
+.lobby-glow {
+    position: absolute;
+    inset: 2px;
+    background: linear-gradient(180deg, rgba(255, 230, 170, 0.45) 0%, rgba(255, 190, 100, 0.7) 100%);
+    opacity: var(--esplanade-light-opacity);
+    transition: opacity 0.2s ease-out;
+    pointer-events: none;
+}
+
+/* ------- Sidewalk Promenade & Trees ------- */
+.promenade {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    width: 100%;
+    height: 26px;
+    background: #191f2c;
+    border-top: 1px solid #2e374c;
+    display: flex;
+    align-items: flex-end;
+    z-index: 1;
+}
+
+.promenade-pavement {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, 
+        transparent 0, 
+        transparent 20px, 
+        rgba(255, 255, 255, 0.02) 20px, 
+        rgba(255, 255, 255, 0.02) 21px
+    );
+}
+
+.curb-edge {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #333d52;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+
+.street-trees {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.tree {
+    position: absolute;
+    bottom: 3px;
+    width: 15px;
+    height: 20px;
+}
+
+.tree-canopy {
+    width: 100%;
+    height: 100%;
+    background: #0b1810;
+    border-radius: 50% 50% 25% 25%;
+    box-shadow: 0 0 6px rgba(5, 12, 8, 0.7);
+}
+
+.tree-1 { left: 4%; }
+.tree-2 { left: 18%; }
+.tree-3 { left: 34%; }
+.tree-4 { left: 48%; }
+.tree-5 { left: 64%; }
+.tree-6 { left: 80%; }
+.tree-7 { left: 94%; }
+
+.street-lamps {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end;
+    padding: 0 3%;
+    pointer-events: none;
+}
+
+.street-lamps .lamp-post {
+    position: relative;
+    width: 2.5px;
+    height: 20px;
+    background: #252c3c;
+}
+
+.lamp-fixture {
+    position: absolute;
+    top: -3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ffeaa0;
+    box-shadow: 0 0 10px #ffeaa0, 0 0 22px rgba(255, 215, 130, 0.6);
+    opacity: var(--esplanade-light-opacity);
+    transition: opacity 0.2s ease-out;
+}
+
+.lamp-cone {
+    position: absolute;
+    top: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 46px;
+    height: 26px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(255, 235, 160, 0.38) 0%, rgba(255, 210, 120, 0.12) 50%, transparent 80%);
+    opacity: var(--esplanade-light-opacity);
+    pointer-events: none;
+    transition: opacity 0.2s ease-out;
+}
+
+/* ------- Roadway & Lanes ------- */
+.roadway {
+    position: absolute;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    height: 94px;
+    background: #11141e;
+    border-top: 1px solid #1c2232;
+    border-bottom: 2px solid #252d40;
+    overflow: hidden;
+    z-index: 2;
+}
+
+.road-asphalt {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(90deg, 
+        transparent 0, 
+        transparent 4px, 
+        rgba(255, 255, 255, 0.015) 4px, 
+        rgba(255, 255, 255, 0.015) 8px
+    );
+}
+
+/* ------- Road Median ------- */
+.road-median {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    transform: translateY(-50%);
+    background: repeating-linear-gradient(180deg, #ffbe26 0, #ffbe26 1.5px, transparent 1.5px, transparent 2.5px, #ffbe26 2.5px, #ffbe26 4px);
+    opacity: 0.8;
+}
+
+/* ------- Lane Dividers ------- */
+.lane-divider {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, 
+        rgba(255,255,255,0.7) 0, 
+        rgba(255,255,255,0.7) 20px, 
+        transparent 20px, 
+        transparent 38px
+    );
+    opacity: 0.55;
+}
+
+.lane-divider.lane-west { top: 25%; }
+.lane-divider.lane-east { top: 75%; }
+
+/* ------- Pedestrian Crosswalks ------- */
+.crosswalk {
+    position: absolute;
+    top: 0;
+    width: 52px;
+    height: 100%;
+    background: repeating-linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.5) 0, 
+        rgba(255, 255, 255, 0.5) 7px, 
+        transparent 7px, 
+        transparent 14px
+    );
+    opacity: 0.55;
+}
+
+.crosswalk.crosswalk-left { left: 16%; }
+.crosswalk.crosswalk-right { left: 74%; }
+
+/* ------- Moving Traffic & Cars ------- */
+.traffic-lane {
+    position: absolute;
+    left: 0;
+    width: 100%;
+}
+
+.traffic-west-fast {
+    top: 7px;
+    height: 16px;
+    animation: traffic-west-move 8s linear infinite;
+}
+
+.traffic-west-slow {
+    top: 26px;
+    height: 18px;
+    animation: traffic-west-move 12s linear infinite;
+}
+
+.traffic-east-fast {
+    bottom: 26px;
+    height: 18px;
+    animation: traffic-east-move 9s linear infinite;
+}
+
+.traffic-east-slow {
+    bottom: 7px;
+    height: 16px;
+    animation: traffic-east-move 13s linear infinite;
+}
+
+.car {
+    position: absolute;
+    border-radius: 2px;
+}
+
+.car.sedan { width: 24px; height: 10px; }
+.car.taxi { width: 24px; height: 10px; background: #e09f18 !important; }
+.car.suv { width: 28px; height: 12px; }
+.car.bus { width: 52px; height: 14px; }
+.car.van { width: 32px; height: 12px; }
+
+/* ------- Westbound Headlight Glows ------- */
+.car-headlight {
+    background: #1c2234;
+    box-shadow: -16px 0 20px rgba(255, 240, 190, 0.95), -36px 0 32px rgba(255, 220, 130, 0.55);
+}
+
+/* ------- Eastbound Taillight Trails ------- */
+.car-taillight {
+    background: #241419;
+    box-shadow: 14px 0 16px rgba(255, 45, 45, 0.95), 30px 0 24px rgba(255, 45, 45, 0.45);
+}
+
+.car-1 { left: 10%; }
+.car-2 { left: 45%; }
+.car-3 { left: 78%; }
+.car-1 { left: 22%; }
+.car-2 { left: 68%; }
+
+.car-1 { left: 8%; }
+.car-2 { left: 42%; }
+.car-3 { left: 75%; }
+.car-1 { left: 28%; }
+.car-10 { left: 86%; }
+
+@keyframes traffic-west-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(calc(100vw + 80px)); }
+}
+
+@keyframes traffic-east-move {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(calc(-100vw - 80px)); }
+}
+
+/* ------- Foreground Window Frame ------- */
+
+.window-frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: inset 0 0 110px var(--room-shadow);
+    transform: translateZ(90px) scale(0.92);
+    transform-origin: 50% 50%;
+    transition: box-shadow 0.15s ease-out;
+}
+
+.glass-glare {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(130deg, 
+        rgba(255, 255, 255, 0.04) 0%, 
+        rgba(255, 255, 255, 0) 40%, 
+        rgba(255, 255, 255, 0.02) 60%, 
+        rgba(255, 255, 255, 0) 80%
+    );
+    z-index: 9;
+}
+
+/* ------- Desk Lamp Glass Reflection ------- */
+.lamp-reflection {
+    position: absolute;
+    top: 42%;
+    right: 18%;
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 225, 170, 0.22) 0%, rgba(255, 190, 120, 0.06) 50%, transparent 75%);
+    filter: blur(12px);
+    opacity: var(--lamp-opacity);
+    pointer-events: none;
+    z-index: 9;
+    transition: opacity 0.2s ease-out;
+}
+
+.frame-border {
+    position: absolute;
+    background: #0d1017;
+    border: 1px solid #1a1f2c;
+}
+
+.frame-top {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4%;
+    background: linear-gradient(180deg, #06080d 0%, #151822 100%);
+}
+
+.frame-left {
+    top: 0;
+    left: 0;
+    width: 3.5%;
+    height: 100%;
+    background: linear-gradient(90deg, #06080d 0%, #151822 100%);
+}
+
+.frame-right {
+    top: 0;
+    right: 0;
+    width: 3.5%;
+    height: 100%;
+    background: linear-gradient(-90deg, #06080d 0%, #151822 100%);
+}
+
+/* ------- Windowsill Ledge ------- */
+.windowsill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 22px;
+    background: linear-gradient(0deg, #06080d 0%, #171b26 100%);
+    border-top: 1.5px solid #2e3648;
+    box-shadow: 0 -3px 12px rgba(0,0,0,0.85);
+    z-index: 11;
+}
+
+
+
+/* ------- Time Controls Widget ------- */
+
+.time-widget {
+    position: absolute;
+    bottom: 24px;
+    right: 28px;
+    z-index: 12;
+    pointer-events: auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.time-trigger {
+    background: rgba(14, 18, 30, 0.72);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 20px;
+    padding: 5px 13px;
+    color: #cbd5e1;
+    font-size: 11.5px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    transition: all 0.2s ease;
+}
+
+.time-trigger:hover {
+    background: rgba(20, 26, 42, 0.9);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #fff;
+}
+
+.live-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px #22c55e;
+    transition: background-color 0.2s ease;
+}
+
+.live-dot.simulated {
+    background: #f59e0b;
+    box-shadow: 0 0 6px #f59e0b;
+}
+
+.time-val {
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.time-sep {
+    color: rgba(255, 255, 255, 0.25);
+}
+
+.phase-val {
+    color: #94a3b8;
+    font-size: 10.5px;
+}
+
+.chevron-icon {
+    color: rgba(255, 255, 255, 0.4);
+    margin-left: 2px;
+    transition: transform 0.2s ease;
+}
+
+.time-widget.open .chevron-icon {
+    transform: rotate(180deg);
+}
+
+/* ------- Time Controls Drawer ------- */
+.time-drawer {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 0;
+    width: 320px;
+    max-width: calc(100vw - 32px);
+    background: rgba(14, 18, 30, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    padding: 12px 14px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.05);
+    flex-direction: column;
+    gap: 10px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.time-widget.open .time-drawer {
+    display: flex;
+}
+
+.drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.drawer-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.2px;
+}
+
+.drawer-slider {
+    width: 100%;
+}
+
+/* ------- Time Scrubber Slider ------- */
+input[type="range"]#timeSlider {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.18);
+    outline: none;
+    cursor: pointer;
+}
+
+input[type="range"]#timeSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    border: none;
+    transition: transform 0.1s ease;
+}
+
+input[type="range"]#timeSlider::-webkit-slider-thumb:hover {
+    transform: scale(1.3);
+}
+
+.drawer-presets {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+}
+
+.preset-btn {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #94a3b8;
+    padding: 3px 4px;
+    border-radius: 5px;
+    font-size: 10.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    flex: 1;
+    white-space: nowrap;
+}
+
+.preset-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.preset-btn.active {
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.preset-btn.live-btn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2.5px 8px;
+    border-radius: 12px;
+    font-size: 10.5px;
+    font-weight: 600;
+    background: rgba(34, 197, 94, 0.15);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    color: #4ade80;
+}
+
+.preset-btn.live-btn:hover {
+    background: rgba(34, 197, 94, 0.25);
+    border-color: rgba(34, 197, 94, 0.6);
+    color: #86efac;
+}
+
+.preset-btn.live-btn.active {
+    background: rgba(34, 197, 94, 0.25);
+    border-color: rgba(34, 197, 94, 0.7);
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.35);
+    color: #86efac;
+}
+
+/* ------- Responsive Media Queries ------- */
+
+@media (max-width: 800px) {
+    .frame-mullion {
+        left: 55%;
+        width: 5%;
+    }
+    .time-widget {
+        bottom: 16px;
+        right: 16px;
+    }
+}
+
+@media (max-width: 500px) {
+    .frame-left, .frame-right { width: 4.5%; }
+    .frame-top { height: 4.5%; }
+    .windowsill { height: 7%; }
+    .frame-mullion { left: 50%; width: 7%; }
+    .sun { width: 62px; height: 62px; }
+    .moon { width: 54px; height: 54px; }
+}
